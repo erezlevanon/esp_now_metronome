@@ -13,17 +13,9 @@
 #define STEPPER_IN_3 5
 #define STEPPER_IN_4 17
 
-const float steps_per_revolution = 2038.0f;
-const float angle_fraction_of_circle = 0.333f;
-const int full_movement_steps = steps_per_revolution * angle_fraction_of_circle;
-const int one_side_movement = full_movement_steps / 2;
-// Should match code in the transmitter.
-const uint8_t min_recieved_pos = 0;
-const uint8_t max_recieved_pos = 255;
-
 // DO NOT TOUCH - data structure defined also in transmitter.
 typedef struct metronom_struct {
-  uint8_t position;
+  int position;
   int8_t direction;
   bool trigger_click;
 } metronom_struct;
@@ -40,8 +32,7 @@ long click_start = 0;
 // Callback function that will be executed when data is received.
 void OnDataRecv(const esp_now_recv_info *r_info, const unsigned char *incomingData, int len) {
   memcpy(&metronom, incomingData, sizeof(metronom));
-  const int target = map(metronom.position, min_recieved_pos, max_recieved_pos, -one_side_movement, one_side_movement);
-  stepper.moveTo(target);
+  stepper.moveTo(metronom.position);
   click_now = metronom.trigger_click;
   if (click_now) {
     click_start = millis();
