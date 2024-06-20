@@ -10,10 +10,10 @@ const float angle_fraction_of_circle = 0.333f;
 const int full_movement_steps = steps_per_revolution * angle_fraction_of_circle;
 const int one_side_movement = full_movement_steps / 2;
 
-const float bpm = 60.0;
-const float click_duration_ms = 60.0f / bpm * 1000.0;
+const float bpm = 60.0f;
+const float click_duration_ms = (60.0f / bpm) * 1000.0f;
 const float half_circle = PI;
-const float denominator = 1.0f / click_duration_ms * half_circle;
+const float denominator = click_duration_ms * half_circle;
 
 
 uint8_t addresses[NUM_REVCIEVERS][6] = {
@@ -24,7 +24,7 @@ uint8_t addresses[NUM_REVCIEVERS][6] = {
 };
 
 typedef struct metronom_struct {
-  uint8_t position;
+  int position;
   int8_t direction;
   bool trigger_click;
 } metronom_struct;
@@ -59,6 +59,18 @@ void setup() {
     }
   }
   Serial.println("esp-now Setup done.");
+  Serial.println();
+  Serial.println("--------------------------");
+  Serial.println("one_side_movement");
+  Serial.println(one_side_movement);
+  Serial.println("bpm");
+  Serial.println(bpm);
+  Serial.println("click_duration_ms");
+  Serial.println(click_duration_ms);
+  Serial.println("half_circle");
+  Serial.println(half_circle);
+  Serial.println("denominator");
+  Serial.println(denominator);
 
   // init metronom
   metronom.direction = 1;
@@ -93,7 +105,7 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max)
 }
 
 int get_position() {
-  return (int) fmap(sin(millis() * denominator), -1.0, 1.0, -one_side_movement, one_side_movement);
+  return (int) fmap(sin(millis() / denominator), -1.0, 1.0, -one_side_movement, one_side_movement);
 }
 
 void loop() {
@@ -102,8 +114,12 @@ void loop() {
   metronom.direction = get_direction();
   metronom.trigger_click = get_trigger();
 
-  Serial.print("new: ");
-  Serial.println(metronom.position);
+  // if (metronom.trigger_click) {
+  //   Serial.println("click");
+  // }
+  // Serial.print("new: ");
+  // Serial.println(metronom.position);
+
   // Serial.print(", prev:");
   // Serial.println(prev_metronom.position);
 
@@ -115,6 +131,6 @@ void loop() {
   // Serial.print(", ");
   // Serial.println(metronom.trigger_click);
   esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
-  analogWrite(2, metronom.position);
+  analogWrite(2, map(metronom.position, -one_side_movement, one_side_movement, 0, 255));
   delay(50);
 }
