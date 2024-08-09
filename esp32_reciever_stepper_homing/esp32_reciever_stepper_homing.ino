@@ -55,26 +55,31 @@ float deltaTime = 0;         //time difference
 float errorValue = 0;        //error
 float edot = 0;              //derivative (de/dt)
 
-
-const float steps_per_revolution = 1600.0f;
-const float gear_reduction = 0.333f;
-const float angle_fraction_of_circle = 0.4f;
-const int full_movement_steps = steps_per_revolution * (angle_fraction_of_circle / gear_reduction);
-const int one_side_movement = full_movement_steps / 2;
-// Should match code in the transmitter.
-const uint8_t min_recieved_pos = 0;
-const uint8_t max_recieved_pos = 255;
-
 //-------------------------------------------------------------------------------------
+
 
 // DO NOT TOUCH - data structure defined also in transmitter.
 typedef struct metronom_struct {
-    uint8_t position;
     int8_t direction;
     bool trigger_click;
 } metronom_struct;
 
 metronom_struct metronom;
+
+
+// Setting for movement.
+
+const float steps_per_revolution = 4800.0f;
+const float angle_fraction_of_circle = 0.4f; // PLAYABLE
+const int full_stroke_steps = steps_per_revolution * angle_fraction_of_circle;
+const int half_stroke_steps = full_stroke_steps / 2;
+
+// THIS SHOULD BE THE SAME AS IN THE TRANSMITTER!!!!!!
+const float time_movement_seconds = 21.0f; // PLAYABLE
+const float max_speed = 102.0f;
+
+const float acceleration = max_speed ^ 2 / (max_speed * time_movement_seconds - full_stroke_steps);
+
 
 // Stepper definition
 AccelStepper stepper = AccelStepper(stepper.DRIVER, STEP_PIN, DIR_PIN);
@@ -86,8 +91,7 @@ long click_start = 0;
 // Callback function that will be executed when data is received.
 void OnDataRecv(const esp_now_recv_info* r_info, const unsigned char* incomingData, int len) {
     memcpy(&metronom, incomingData, sizeof(metronom));
-    const int target = map(metronom.position, min_recieved_pos, max_recieved_pos, -one_side_movement, one_side_movement);
-    stepper.moveTo(target);
+    stepper.moveTo(metronom.direction * half_stroke_steps);
     click_now = metronom.trigger_click;
     if (click_now) {
         click_start = millis();
@@ -110,8 +114,8 @@ void setup() {
     digitalWrite(MS1_PIN, LOW);
     digitalWrite(MS2_PIN, LOW);
 
-    stepper.setMaxSpeed(102.00);
-    stepper.setAcceleration(101.00);
+    stepper.setMaxSpeed(max_speed);
+    stepper.setAcceleration(acceleration);
 
     // Set home position for stepper motor.
     Wire.begin();            //start i2C  //PB6 = SCL, PB7 = SDA
@@ -135,6 +139,17 @@ void setup() {
     esp_now_register_recv_cb(OnDataRecv);
 }
 
+
+void loop() {
+    if ((millis() - click_start) > CLICK_DURATION_MS) {
+        digitalWrite(CLICK_PIN, LOW);
+        click_now = false;
+    }
+    if (stepper.distanceToGo() != 0) {
+        stepper.run();
+    }
+}
+
 void set_home() {
     // TODO: Put here the code for moving the arm.
     ReadRawAngle();   //make a reading so the degAngle gets updated
@@ -155,16 +170,6 @@ void set_home() {
         Serial.println(totalAngle);    //Variable
     }
     stepper.setCurrentPosition(0);
-}
-
-void loop() {
-    if ((millis() - click_start) > CLICK_DURATION_MS) {
-        digitalWrite(CLICK_PIN, LOW);
-        click_now = false;
-    }
-    if (stepper.distanceToGo() != 0) {
-        stepper.run();
-    }
 }
 
 //AS5600 --- BEGIN ---

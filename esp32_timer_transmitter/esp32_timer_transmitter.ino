@@ -5,15 +5,9 @@
 
 #define NUM_REVCIEVERS 3
 
-const float steps_per_revolution = 4800.0f;
-const float angle_fraction_of_circle = 0.4f; // PLAYABLE
-const int full_stroke_steps = steps_per_revolution * angle_fraction_of_circle;
 
+// THIS SHOULD BE THE SAME AS IN THE RECIEVER!!!!!!
 const float time_movement_seconds = 21.0f; // PLAYABLE
-const float max_speed = 102.0f;
-
-const float acceleration = max_speed ^ 2 / (max_speed * time_movement_seconds - full_stroke_steps);
-
 
 uint8_t addresses[NUM_REVCIEVERS][6] = {
   // { 0xC8, 0x2E, 0x18, 0xC3, 0xA3, 0x08 }, (transmitter)
@@ -23,7 +17,6 @@ uint8_t addresses[NUM_REVCIEVERS][6] = {
 };
 
 typedef struct metronom_struct {
-  int8_t position;
   int8_t direction;
   bool trigger_click;
 } metronom_struct;
@@ -32,6 +25,8 @@ metronom_struct metronom;
 metronom_struct prev_metronom;
 
 esp_now_peer_info_t peerInfo;
+
+long timer = 0;
 
 
 void setup() {
@@ -73,7 +68,6 @@ void setup() {
 
   // init metronom
   metronom.direction = 1;
-  metronom.position = 0;
   metronom.trigger_click = false;
 
   memcpy(&prev_metronom, &metronom, sizeof(metronom));
@@ -86,16 +80,16 @@ template<typename T> int sgn(T val) {
 }
 
 int8_t get_direction() {
-  if (metronom.direction > 0) {
-    if (metronom.position < prev_metronom.position) return -1;
-  } else if (metronom.position > prev_metronom.position) {
-    return 1;
-  }
-  return metronom.direction;
+    const time_now = millis()
+    if (time_now - timer > (time_movement_seconds * 1000)) {
+        timer = time_now;
+        return -1 * prev_metronom.direction;
+    }
+    return prev_metronom.direction;
 }
 
 bool get_trigger() {
-  return metronom.position != 0 && prev_metronom.position == 0 || metronom.position != 255 && prev_metronom.position == 255;
+    return metronom.direction != prev_metronom.direction;
 }
 
 float fmap(float x, float in_min, float in_max, float out_min, float out_max)
@@ -103,13 +97,7 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max)
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-int get_position() {
-  return (int) fmap(sin(millis() / denominator), -1.0, 1.0, -one_side_movement, one_side_movement);
-}
-
 void loop() {
-  // put your main code here, to run repeatedly:
-  metronom.position = get_position();
   metronom.direction = get_direction();
   metronom.trigger_click = get_trigger();
 
@@ -131,5 +119,5 @@ void loop() {
   // Serial.println(metronom.trigger_click);
   esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
   analogWrite(2, map(metronom.position, -one_side_movement, one_side_movement, 0, 255));
-  delay(50);
+  delay(90);
 }
