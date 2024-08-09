@@ -4,7 +4,7 @@
 
 
 #define NUM_REVCIEVERS 3
-
+constexpr auto LED_PIN = 2;
 
 // THIS SHOULD BE THE SAME AS IN THE RECIEVER!!!!!!
 const float time_movement_seconds = 21.0f; // PLAYABLE
@@ -64,7 +64,7 @@ void setup() {
 
   memcpy(&prev_metronom, &metronom, sizeof(metronom));
 
-  pinMode(2, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 template<typename T> int sgn(T val) {
@@ -108,6 +108,6 @@ void loop() {
   // Serial.print(", ");
   // Serial.println(metronom.trigger_click);
   esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
-  digitalWrite(2, metronom.direction > 0);
+  digitalWrite(LED_PIN, metronom.trigger_click);
   delay(90);
 }
