@@ -5,15 +5,14 @@
 
 #define NUM_REVCIEVERS 3
 
-const float steps_per_revolution = 2038.0f;
-const float angle_fraction_of_circle = 0.333f;
-const int full_movement_steps = steps_per_revolution * angle_fraction_of_circle;
-const int one_side_movement = full_movement_steps / 2;
+const float steps_per_revolution = 4800.0f;
+const float angle_fraction_of_circle = 0.4f; // PLAYABLE
+const int full_stroke_steps = steps_per_revolution * angle_fraction_of_circle;
 
-const float bpm = 60.0f;
-const float click_duration_ms = (60.0f / bpm) * 1000.0f;
-const float half_circle = PI;
-const float denominator = click_duration_ms * half_circle;
+const float time_movement_seconds = 21.0f; // PLAYABLE
+const float max_speed = 102.0f;
+
+const float acceleration = max_speed ^ 2 / (max_speed * time_movement_seconds - full_stroke_steps);
 
 
 uint8_t addresses[NUM_REVCIEVERS][6] = {
@@ -24,7 +23,7 @@ uint8_t addresses[NUM_REVCIEVERS][6] = {
 };
 
 typedef struct metronom_struct {
-  int position;
+  int8_t position;
   int8_t direction;
   bool trigger_click;
 } metronom_struct;
