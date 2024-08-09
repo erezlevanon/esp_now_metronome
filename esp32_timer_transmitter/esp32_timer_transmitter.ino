@@ -72,7 +72,7 @@ template<typename T> int sgn(T val) {
 }
 
 int8_t get_direction() {
-    const time_now = millis()
+    const long time_now = millis()
     if (time_now - timer > (time_movement_seconds * 1000)) {
         timer = time_now;
         return -1 * prev_metronom.direction;
