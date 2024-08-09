@@ -16,9 +16,10 @@ uint8_t addresses[NUM_REVCIEVERS][6] = {
   { 0x30, 0xC9, 0x22, 0xD1, 0xC2, 0xA8 },
 };
 
+// DO NOT TOUCH - data structure defined also in transmitter.
 typedef struct metronom_struct {
-  int8_t direction;
-  bool trigger_click;
+    int8_t direction;
+    bool trigger_click;
 } metronom_struct;
 
 metronom_struct metronom;
@@ -107,7 +108,12 @@ void loop() {
   // Serial.print(metronom.direction);
   // Serial.print(", ");
   // Serial.println(metronom.trigger_click);
-  esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
+  if (metronom.trigger_click) {
+      for (int i = 0; i < 4; i++) {
+          esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
+      }
+      delay(50);
+  }
   digitalWrite(LED_PIN, metronom.trigger_click);
-  delay(90);
+  delay(50);
 }

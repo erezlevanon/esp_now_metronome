@@ -91,8 +91,8 @@ long click_start = 0;
 // Callback function that will be executed when data is received.
 void OnDataRecv(const esp_now_recv_info* r_info, const unsigned char* incomingData, int len) {
     memcpy(&metronom, incomingData, sizeof(metronom));
-    stepper.moveTo(metronom.direction * half_stroke_steps);
     click_now = metronom.trigger_click;
+    stepper.moveTo(metronom.direction * half_stroke_steps);
     if (click_now) {
         click_start = millis();
         digitalWrite(CLICK_PIN, HIGH);
