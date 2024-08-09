@@ -78,7 +78,7 @@ const int half_stroke_steps = full_stroke_steps / 2;
 const float time_movement_seconds = 21.0f; // PLAYABLE
 const float max_speed = 102.0f;
 
-const float acceleration = max_speed ^ 2 / (max_speed * time_movement_seconds - full_stroke_steps);
+const float acceleration = (max_speed * max_speed) / (max_speed * time_movement_seconds - full_stroke_steps);
 
 
 // Stepper definition
