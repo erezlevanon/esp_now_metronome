@@ -33,6 +33,8 @@ void setup() {
 
 	stepper.setMaxSpeed(102.00);
 	stepper.setAcceleration(101.00);
+
+	printListening();
 }
 
 void loop() {
@@ -41,10 +43,20 @@ void loop() {
 		myCmd = Serial.readStringUntil('\r');
 		Serial.print("Got new position: ");
 		Serial.print(myCmd);
+		long steps = myCmd.toInt();
+		if (myCmd.equals("") || steps == 0) {
+			Serial.println("Got 0 or illegal number.");
+			printListening();
+		};
 		Serial.println(".");
 		stepper.runToNewPosition(myCmd.toInt());
 		Serial.println("Done moving, going home.");
 		stepper.runToNewPosition(0);
 		Serial.println("Got back home.");
+		printListening();
 	}
+}
+
+void printListening() {
+	Serial.println("Listening...");
 }
