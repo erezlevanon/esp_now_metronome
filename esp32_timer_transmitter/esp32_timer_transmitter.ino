@@ -55,16 +55,8 @@ void setup() {
   Serial.println("esp-now Setup done.");
   Serial.println();
   Serial.println("--------------------------");
-  Serial.println("one_side_movement");
-  Serial.println(one_side_movement);
-  Serial.println("bpm");
-  Serial.println(bpm);
-  Serial.println("click_duration_ms");
-  Serial.println(click_duration_ms);
-  Serial.println("half_circle");
-  Serial.println(half_circle);
-  Serial.println("denominator");
-  Serial.println(denominator);
+  Serial.println("time_movement_seconds");
+  Serial.println(time_movement_seconds);
 
   // init metronom
   metronom.direction = 1;
@@ -105,19 +97,17 @@ void loop() {
   //   Serial.println("click");
   // }
   // Serial.print("new: ");
-  // Serial.println(metronom.position);
+  // Serial.println(metronom.direction);
 
   // Serial.print(", prev:");
-  // Serial.println(prev_metronom.position);
+  // Serial.println(prev_metronom.direction);
 
   memcpy(&prev_metronom, &metronom, sizeof(metronom));
   // Serial.print("Sending: ");
-  // Serial.print(metronom.position);
-  // Serial.print(", ");
   // Serial.print(metronom.direction);
   // Serial.print(", ");
   // Serial.println(metronom.trigger_click);
   esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
-  analogWrite(2, map(metronom.position, -one_side_movement, one_side_movement, 0, 255));
+  digitalWrite(2, metronom.direction > 0);
   delay(90);
 }
