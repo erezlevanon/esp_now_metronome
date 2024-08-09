@@ -45,6 +45,6 @@ void loop() {
 		stepper.runToNewPosition(myCmd.toInt());
 		Serial.println("Done moving, going home.");
 		stepper.runToNewPosition(0);
+		Serial.println("Got back home.");
 	}
 }
-// Setup stepper
