@@ -30,6 +30,11 @@ esp_now_peer_info_t peerInfo;
 long timer = 0;
 
 
+// Callback function that will be executed when data is received.
+void OnDataRecv(const esp_now_recv_info* r_info, const unsigned char* incomingData, int len) {
+    esp_err_t result = esp_now_send(r_info.src_addr, (uint8_t*)&metronom, sizeof(metronom));
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -64,6 +69,7 @@ void setup() {
   metronom.trigger_click = false;
 
   memcpy(&prev_metronom, &metronom, sizeof(metronom));
+  esp_now_register_recv_cb(OnDataRecv);
 
   pinMode(LED_PIN, OUTPUT);
 }
@@ -109,10 +115,9 @@ void loop() {
   // Serial.print(", ");
   // Serial.println(metronom.trigger_click);
   if (metronom.trigger_click) {
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 1; i++) {
           esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
       }
-      delay(50);
   }
   digitalWrite(LED_PIN, metronom.trigger_click);
   delay(50);

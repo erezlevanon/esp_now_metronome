@@ -66,9 +66,12 @@ typedef struct metronom_struct {
 
 metronom_struct metronom;
 
+// Setting for sync call
+uint8_t transmitter_address[6] = { 0xC8, 0x2E, 0x18, 0xC3, 0xA3, 0x08 };
+esp_now_peer_info_t transmitter_info;
+
 
 // Setting for movement.
-
 const float steps_per_revolution = 4800.0f;
 const float angle_fraction_of_circle = 0.4f; // PLAYABLE
 const int full_stroke_steps = steps_per_revolution * angle_fraction_of_circle;
@@ -122,6 +125,7 @@ void setup() {
     Wire.setClock(800000L);  //fast clock
     checkMagnetPresence();   //check the magnet (blocks until magnet is found)
     set_home();
+    ask_for_sync();
 
 
     // Set click
@@ -170,6 +174,22 @@ void set_home() {
         Serial.println(totalAngle);    //Variable
     }
     stepper.setCurrentPosition(0);
+}
+
+void ask_for_sync() {
+    transmitter_info.channel = 0;
+    transmitter_info.encrypt = false;
+    for (int i = 0; i < NUM_REVCIEVERS; i++) {
+        Serial.print("initializing peer: ");
+        Serial.println(i);
+        memcpy(transmitter_info.peer_addr, transmitter_address, 6);
+        if (esp_now_add_peer(&transmitter_info) != ESP_OK) {
+            Serial.println("Failed to add peer");
+            return;
+        }
+    }
+
+    esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
 }
 
 //AS5600 --- BEGIN ---
