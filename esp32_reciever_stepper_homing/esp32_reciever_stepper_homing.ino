@@ -179,14 +179,11 @@ void set_home() {
 void ask_for_sync() {
     transmitter_info.channel = 0;
     transmitter_info.encrypt = false;
-    for (int i = 0; i < NUM_REVCIEVERS; i++) {
-        Serial.print("initializing peer: ");
-        Serial.println(i);
-        memcpy(transmitter_info.peer_addr, transmitter_address, 6);
-        if (esp_now_add_peer(&transmitter_info) != ESP_OK) {
-            Serial.println("Failed to add peer");
-            return;
-        }
+
+    memcpy(transmitter_info.peer_addr, transmitter_address, 6);
+    if (esp_now_add_peer(&transmitter_info) != ESP_OK) {
+        Serial.println("Failed to add peer");
+        return;
     }
 
     esp_err_t result = esp_now_send(0, (uint8_t*)&metronom, sizeof(metronom));
